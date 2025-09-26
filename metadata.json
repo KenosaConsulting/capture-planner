@@ -1,0 +1,5 @@
+{
+  "name": "GovCon Capture Planner AI",
+  "description": "An AI-powered tool for government contractors to generate executive briefings and capture plans from procurement and strategy documents using the Gemini API.",
+  "requestFramePermissions": []
+}

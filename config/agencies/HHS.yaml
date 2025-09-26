@@ -1,0 +1,45 @@
+# Department of Health and Human Services Configuration
+code: HHS
+names:
+  - "Department of Health and Human Services"
+  - "HHS"
+  - "Health and Human Services"
+bureaus:
+  - "CMS"
+  - "Centers for Medicare & Medicaid Services"
+  - "NIH"
+  - "National Institutes of Health"
+  - "CDC"
+  - "FDA"
+  - "HRSA"
+  - "SAMHSA"
+  - "IHS"
+signals:
+  priority_high:
+    - "HIPAA"
+    - "EHR"
+    - "PHI"
+    - "patient data"
+    - "healthcare.gov"
+    - "medical device security"
+  priority_med:
+    - "telehealth"
+    - "drug supply chain"
+    - "clinical trials"
+    - "public health data"
+mandates:
+  - "HIPAA"
+  - "HITECH"
+  - "GAO"
+  - "OIG"
+  - "OMB M-"
+scoring_weights:
+  specificity: 0.35
+  compliance: 0.45
+  budget: 0.2
+limits:
+  max_cards: 60
+  min_per_csf: 2
+  max_per_doc: 12
+annex:
+  page_size: 40

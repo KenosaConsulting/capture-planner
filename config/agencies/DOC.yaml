@@ -1,0 +1,45 @@
+# Department of Commerce Configuration
+code: DOC
+names:
+  - "Department of Commerce"
+  - "DOC"
+  - "Commerce"
+  - "Dept of Commerce"
+bureaus:
+  - "NIST"
+  - "National Institute of Standards and Technology"
+  - "USPTO"
+  - "NOAA"
+  - "Census"
+  - "ITA"
+  - "BIS"
+  - "EDA"
+signals:
+  priority_high:
+    - "ECDM"
+    - "TLS 1.3"
+    - "HPC Security"
+    - "Enterprise Cybersecurity"
+    - "Zero Trust Architecture"
+  priority_med:
+    - "supply chain"
+    - "DevSecOps"
+    - "cloud migration"
+    - "post-quantum cryptography"
+    - "PQC"
+mandates:
+  - "OIG-25-006-A"
+  - "GAO-24-106137"
+  - "OMB M-"
+  - "FISMA"
+  - "FedRAMP"
+scoring_weights:
+  specificity: 0.4
+  compliance: 0.35
+  budget: 0.25
+limits:
+  max_cards: 60
+  min_per_csf: 2
+  max_per_doc: 12
+annex:
+  page_size: 40

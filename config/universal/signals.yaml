@@ -1,0 +1,114 @@
+# Universal Signals - Apply to All Agencies
+# These are cyber signals that are relevant regardless of agency
+
+always_relevant:
+  # Zero Trust & Identity
+  - "Zero Trust"
+  - "zero trust architecture"
+  - "ZTA"
+  - "ICAM"
+  - "identity management"
+  - "privileged access"
+  - "PAM"
+  
+  # Cloud & DevSecOps
+  - "DevSecOps"
+  - "CI/CD"
+  - "cloud security"
+  - "cloud migration"
+  - "FedRAMP"
+  - "cloud.gov"
+  - "IaaS"
+  - "PaaS"
+  - "SaaS"
+  
+  # Security Operations
+  - "SOC"
+  - "Security Operations Center"
+  - "SIEM"
+  - "incident response"
+  - "threat hunting"
+  - "continuous monitoring"
+  - "CDM"
+  - "ECDM"
+  
+  # Compliance & Frameworks
+  - "FISMA"
+  - "NIST 800-53"
+  - "NIST CSF"
+  - "Cybersecurity Framework"
+  - "RMF"
+  - "Risk Management Framework"
+  - "ATO"
+  - "POA&M"
+  
+  # Emerging Tech
+  - "artificial intelligence"
+  - "AI security"
+  - "machine learning"
+  - "ML security"
+  - "quantum"
+  - "post-quantum cryptography"
+  - "PQC"
+  
+  # Network & Encryption
+  - "TLS 1.3"
+  - "encryption"
+  - "PKI"
+  - "network segmentation"
+  - "microsegmentation"
+  
+  # Supply Chain
+  - "supply chain"
+  - "SBOM"
+  - "software bill of materials"
+  - "third-party risk"
+  - "vendor risk"
+  
+  # Data Protection
+  - "data loss prevention"
+  - "DLP"
+  - "data classification"
+  - "data governance"
+  - "privacy"
+  
+  # Vulnerability Management
+  - "vulnerability"
+  - "patch management"
+  - "penetration testing"
+  - "security assessment"
+  - "STIG"
+  
+  # Logging & Visibility
+  - "logging"
+  - "log management"
+  - "visibility"
+  - "monitoring"
+  - "audit trail"
+
+mandate_keywords:
+  - "SHALL"
+  - "MUST"
+  - "REQUIRED"
+  - "MANDATORY"
+  - "OMB M-"
+  - "Executive Order"
+  - "EO "
+
+budget_signals:
+  - "million"
+  - "billion"
+  - "contract"
+  - "procurement"
+  - "acquisition"
+  - "IDIQ"
+  - "BPA"
+  - "task order"
+  - "obligation"
+  - "award"
+  - "funding"
+  - "FY20"
+  - "fiscal year"
+  - "budget"
+  - "cost"
+  - "price"

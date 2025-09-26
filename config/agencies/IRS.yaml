@@ -1,0 +1,40 @@
+# Internal Revenue Service Configuration
+code: IRS
+names:
+  - "Internal Revenue Service"
+  - "IRS"
+  - "Revenue Service"
+bureaus:
+  - "Criminal Investigation"
+  - "Large Business and International"
+  - "Small Business/Self-Employed"
+  - "Tax Exempt and Government Entities"
+  - "Wage and Investment"
+signals:
+  priority_high:
+    - "tax processing"
+    - "identity verification"
+    - "fraud detection"
+    - "return integrity"
+    - "FISMA POA&M"
+  priority_med:
+    - "taxpayer data protection"
+    - "e-authentication"
+    - "Get Transcript"
+    - "payment systems"
+mandates:
+  - "TIGTA"
+  - "GAO"
+  - "OMB M-"
+  - "FISMA"
+  - "Section 508"
+scoring_weights:
+  specificity: 0.35
+  compliance: 0.4
+  budget: 0.25
+limits:
+  max_cards: 60
+  min_per_csf: 2
+  max_per_doc: 12
+annex:
+  page_size: 40

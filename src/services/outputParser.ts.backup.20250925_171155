@@ -1,0 +1,118 @@
+// Output parser for Gemini responses
+import type { PipelineError } from '../types/errors';
+
+export interface ParsedOutput {
+  briefingMarkdown: string;
+  signals: string | null;
+  themes: string | null;
+  sources: string | null;
+  errors: PipelineError[];
+}
+
+export function parseOutput(raw: string): ParsedOutput {
+  const codeBlockRegex = /```json\s*([\s\S]*?)\s*```/g;
+  const blocks: string[] = [];
+  let match;
+  
+  while ((match = codeBlockRegex.exec(raw)) !== null) {
+    blocks.push(match[1].trim());
+  }
+
+  const errors: PipelineError[] = [];
+  const [signals, themes, sources] = blocks;
+
+  // Check for empty response
+  if (!raw || !raw.trim()) {
+    errors.push({ 
+      stage: 'COMPOSE_BRIEFING', 
+      code: 'OUTPUT_PARSE_FAILED', 
+      message: 'Empty model output.', 
+      hint: 'Check Debug panel for raw response and model metadata.' 
+    });
+  }
+
+  // Check for missing sections
+  if (!signals) {
+    errors.push({ 
+      stage: 'COMPOSE_BRIEFING', 
+      code: 'OUTPUT_SECTION_MISSING', 
+      message: 'Signals Ledger missing.', 
+      hint: 'Model must emit 1st JSON block named Signals Ledger.' 
+    });
+  }
+  
+  if (!themes) {
+    errors.push({ 
+      stage: 'COMPOSE_BRIEFING', 
+      code: 'OUTPUT_SECTION_MISSING', 
+      message: 'Themes Rollup missing.', 
+      hint: 'Model must emit 2nd JSON block named Themes Rollup.' 
+    });
+  }
+  
+  if (!sources) {
+    errors.push({ 
+      stage: 'COMPOSE_BRIEFING', 
+      code: 'OUTPUT_SECTION_MISSING', 
+      message: 'Source Index missing.', 
+      hint: 'Model must emit 3rd JSON block named Source Index.' 
+    });
+  }
+
+  // Remove JSON blocks from briefing markdown
+  const briefingMarkdown = raw
+    .replace(/```json[\s\S]*?```/gm, '')
+    .replace(/## Signals Ledger[\s\S]*?(?=##|$)/gm, '')
+    .replace(/## Themes Rollup[\s\S]*?(?=##|$)/gm, '')
+    .replace(/## Source Index[\s\S]*?(?=##|$)/gm, '')
+    .trim();
+
+  return { 
+    briefingMarkdown, 
+    signals, 
+    themes, 
+    sources, 
+    errors 
+  };
+}
+
+// Helper to extract sections from markdown
+export function extractSections(markdown: string): { 
+  briefing: string; 
+  signalsLedger: string; 
+  themesRollup: string; 
+  sourceIndex: string;
+} {
+  const sections = {
+    briefing: '',
+    signalsLedger: '',
+    themesRollup: '',
+    sourceIndex: ''
+  };
+
+  // Extract main briefing (everything before the first ## section)
+  const briefingMatch = markdown.match(/^([\s\S]*?)(?=##\s*Signals Ledger|##\s*Themes Rollup|##\s*Source Index|$)/);
+  if (briefingMatch) {
+    sections.briefing = briefingMatch[1].trim();
+  }
+
+  // Extract Signals Ledger
+  const signalsMatch = markdown.match(/##\s*Signals Ledger([\s\S]*?)(?=##\s*Themes Rollup|##\s*Source Index|$)/);
+  if (signalsMatch) {
+    sections.signalsLedger = signalsMatch[1].trim();
+  }
+
+  // Extract Themes Rollup
+  const themesMatch = markdown.match(/##\s*Themes Rollup([\s\S]*?)(?=##\s*Source Index|$)/);
+  if (themesMatch) {
+    sections.themesRollup = themesMatch[1].trim();
+  }
+
+  // Extract Source Index
+  const sourcesMatch = markdown.match(/##\s*Source Index([\s\S]*?)$/);
+  if (sourcesMatch) {
+    sections.sourceIndex = sourcesMatch[1].trim();
+  }
+
+  return sections;
+}

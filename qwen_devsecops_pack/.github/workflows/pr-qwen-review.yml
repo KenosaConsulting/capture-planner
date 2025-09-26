@@ -1,0 +1,25 @@
+name: Qwen PR Reviewer
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps for PR bot
+        run: |
+          npm i -D openai@4 node-fetch@3
+      - name: Run Qwen PR Reviewer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+          QWEN_API_BASE: ${{ secrets.QWEN_API_BASE }}
+          QWEN_MODEL_ID: ${{ secrets.QWEN_MODEL_ID }}
+        run: node tools/qwen/pr-reviewer.mjs

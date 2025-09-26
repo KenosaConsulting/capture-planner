@@ -1,0 +1,32 @@
+# Budget Configuration - Maximum prompt sizes per API call
+# All values in characters
+# Rule: Keep 30% headroom (actual limit * 0.7)
+
+sections:
+  BRIEFING_MD:
+    max_prompt_chars: 40000
+    max_evidence_cards: 24
+    description: "Executive Summary, Current Posture, Strategy Outlook"
+    
+  PLAYS_MD:
+    max_prompt_chars: 40000
+    max_evidence_cards: 18
+    description: "Three capture plays with demos and pathways"
+    
+  PROCUREMENT_JSON:
+    max_prompt_chars: 10000
+    max_evidence_cards: 0
+    description: "Pure metrics echo from CSV analysis"
+    
+  ANNEX_JSON:
+    max_prompt_chars: 45000
+    max_evidence_cards: 30
+    description: "Signals Ledger, Themes Rollup, Source Index"
+    pagination_enabled: true
+    
+# Auto-shrink thresholds
+auto_shrink:
+  level_1_threshold: 0.9  # Remove quotes if >90% of budget
+  level_2_threshold: 0.8  # Reduce cards by 20% if >80% after level 1
+  level_3_threshold: 0.7  # Reduce to minimum cards if still over
+  minimum_cards: 12       # Never go below this

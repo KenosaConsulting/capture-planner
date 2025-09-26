@@ -1,0 +1,41 @@
+# Filters Configuration - What content to skip during distillation
+
+# Sections to skip (unless they contain mandate keywords)
+skip_sections:
+  - "table of contents"
+  - "acknowledgments"
+  - "acknowledgements"
+  - "preface"
+  - "foreword"
+  - "glossary"
+  - "appendix"
+  - "appendices"
+  - "references"
+  - "bibliography"
+  - "index"
+  - "list of figures"
+  - "list of tables"
+  - "about the authors"
+  - "copyright"
+
+# Patterns that indicate low-value content
+skip_patterns:
+  - "^Page \\d+"
+  - "^Figure \\d+"
+  - "^Table \\d+"
+  - "^Chart \\d+"
+  - "^Exhibit"
+  - "^\\[This page.*blank\\]"
+  - "^For more information"
+
+# Override - keep sections with these even if normally skipped
+always_keep_if_contains:
+  - "SHALL"
+  - "MUST"
+  - "REQUIRED"
+  - "OMB M-"
+  - "Executive Order"
+  - "million"
+  - "billion"
+  - "contract value"
+  - "obligation"

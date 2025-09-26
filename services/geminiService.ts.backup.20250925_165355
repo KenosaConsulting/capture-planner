@@ -1,0 +1,295 @@
+// Fixed Gemini Service with comprehensive error handling
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { PipelineError } from '../src/types/errors';
+import { CYBER_PROMPT_TEMPLATE } from '../constants';
+
+// Fix #1: Use clear environment variable name
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_API_KEY || '';
+
+if (!apiKey) {
+  console.error('GEMINI_API_KEY not found in environment variables');
+  console.error('Please set VITE_GEMINI_API_KEY or VITE_API_KEY in .env.local');
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
+
+// Helper to extract text from various response formats
+function extractText(result: any): { text: string | null; meta: Record<string, unknown> } {
+  const response = result?.response || result;
+  const candidate = response?.candidates?.[0];
+  const finishReason = candidate?.finishReason;
+  const safetyRatings = candidate?.safetyRatings;
+
+  let text: string | null = null;
+  
+  // Try different ways to get the text (handles various SDK versions)
+  try {
+    // Method 1: Direct text() function
+    if (typeof response?.text === 'function') {
+      text = response.text();
+    }
+    // Method 2: result.text property
+    else if (typeof result?.text === 'string') {
+      text = result.text;
+    }
+    // Method 3: Candidate content
+    else if (candidate?.content?.parts?.[0]?.text) {
+      text = candidate.content.parts[0].text;
+    }
+  } catch (e) {
+    console.error('Error extracting text from response:', e);
+  }
+  
+  return { 
+    text, 
+    meta: { 
+      finishReason, 
+      safetyRatings, 
+      candidateCount: response?.candidates?.length,
+      raw: result 
+    } 
+  };
+}
+
+// Convert Gemini errors to our PipelineError format
+function geminiErrorToPipelineError(e: any, stage: PipelineError['stage'] = 'MODEL_CALL'): PipelineError {
+  const msg = (e instanceof Error ? e.message : String(e)).toLowerCase();
+
+  if (/api[\s_-]?key/i.test(msg) || !apiKey) {
+    return { 
+      stage, 
+      code: 'API_KEY_MISSING', 
+      message: 'Gemini API key not found or invalid.', 
+      hint: 'Check your .env.local file and ensure VITE_GEMINI_API_KEY or VITE_API_KEY is set correctly. Restart the dev server after adding the key.',
+      details: { error: msg, hasKey: !!apiKey }
+    };
+  }
+  if (/blocked/i.test(msg) || /safety/i.test(msg)) {
+    return { 
+      stage, 
+      code: 'MODEL_SAFETY_BLOCK', 
+      message: 'Model blocked content for safety reasons.', 
+      hint: 'Try removing sensitive terms from documents, or split the prompt into smaller sections.', 
+      details: e 
+    };
+  }
+  if (/rate[\s_-]?limit|quota/i.test(msg)) {
+    return { 
+      stage, 
+      code: 'MODEL_RATE_LIMIT', 
+      message: 'API rate limit or quota exceeded.', 
+      hint: 'Wait a few minutes and try again. Consider upgrading your API plan if this persists.', 
+      details: e 
+    };
+  }
+  if (/max[\s_-]?tokens|length|too[\s_-]?long/i.test(msg)) {
+    return { 
+      stage, 
+      code: 'MODEL_LENGTH_BLOCK', 
+      message: 'Input or output exceeded token limits.', 
+      hint: 'Reduce the number or size of documents. Try processing them in batches.', 
+      details: e 
+    };
+  }
+  if (/invalid|bad[\s_-]?request|400/.test(msg)) {
+    return { 
+      stage, 
+      code: 'MODEL_INVALID_REQUEST', 
+      message: 'Invalid request to the AI model.', 
+      hint: 'This is likely a bug. Check the debug panel for details.', 
+      details: e 
+    };
+  }
+  if (/5\d\d|server|unavailable|timeout/.test(msg)) {
+    return { 
+      stage, 
+      code: 'MODEL_SERVER_ERROR', 
+      message: 'AI model server error or timeout.', 
+      hint: 'The service may be temporarily down. Try again in a few minutes.', 
+      details: e 
+    };
+  }
+  
+  return { 
+    stage, 
+    code: 'MODEL_SERVER_ERROR', 
+    message: `Unexpected error: ${msg.substring(0, 100)}`, 
+    hint: 'Check the debug panel for more details.',
+    details: e 
+  };
+}
+
+// Helper to read files
+const readFileAsText = (file: File): Promise<{ name: string, content: string }> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve({ name: file.name, content: reader.result as string });
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsText(file);
+  });
+};
+
+// Add timeout wrapper
+function withTimeout<T>(promise: Promise<T>, ms = 120000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject({
+        stage: 'MODEL_CALL',
+        code: 'MODEL_SERVER_ERROR',
+        message: `Request timed out after ${ms / 1000} seconds`,
+        hint: 'The AI model took too long to respond. Try with fewer documents.'
+      });
+    }, ms);
+
+    promise
+      .then(value => {
+        clearTimeout(timeout);
+        resolve(value);
+      })
+      .catch(error => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+  });
+}
+
+export interface GenerationResult {
+  rawText: string;
+  meta: Record<string, unknown>;
+  runId: string;
+  promptLength: number;
+}
+
+export async function generateExecutiveBriefing(
+  files: File[], 
+  agencyName: string,
+  onProgress?: (stage: string, status: 'start' | 'ok' | 'fail', note?: string) => void
+): Promise<GenerationResult> {
+  const runId = String(Date.now());
+  
+  onProgress?.('MODEL_CALL', 'start', 'Preparing documents...');
+  
+  try {
+    // Check API key first
+    if (!apiKey) {
+      throw geminiErrorToPipelineError(new Error('API key missing'), 'MODEL_CALL');
+    }
+
+    // Read all files
+    const fileContents = await Promise.all(files.map(readFileAsText));
+    
+    const sourcePackContent = fileContents.map(file => 
+      `--- START OF DOCUMENT: ${file.name} ---\n\n${file.content}\n\n--- END OF DOCUMENT: ${file.name} ---`
+    ).join('\n\n');
+
+    const filledPromptTemplate = CYBER_PROMPT_TEMPLATE.replace(/{AGENCY_NAME}/g, agencyName);
+
+    const finalPrompt = `
+CONTEXT FROM ATTACHED SOURCE DOCUMENTS:
+
+${sourcePackContent}
+
+---
+
+PROMPT TO EXECUTE:
+
+${filledPromptTemplate}
+
+---
+
+Diagnostics footer (mandatory):
+Append a fenced json block titled run_diagnostics with:
+{ "sections_emitted": ["briefing", "signals_ledger", "themes_rollup", "source_index"], "token_usage_hint": "approximate", "warnings": [] }
+    `;
+
+    onProgress?.('MODEL_CALL', 'start', 'Calling Gemini API...');
+    
+    // Store prompt for debugging
+    try {
+      localStorage.setItem(`gcca.run.${runId}.request`, finalPrompt.substring(0, 50000));
+      localStorage.setItem(`gcca.run.${runId}.timestamp`, new Date().toISOString());
+    } catch (e) {
+      console.warn('Could not save to localStorage:', e);
+    }
+
+    // Fix #2: Properly format the contents array
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    
+    console.log('Calling Gemini with prompt length:', finalPrompt.length);
+    
+    // Fix #3: Use proper content structure and add timeout
+    const result = await withTimeout(
+      model.generateContent({
+        contents: [{ 
+          role: 'user', 
+          parts: [{ text: finalPrompt }]
+        }]
+      }),
+      120000 // 2 minute timeout
+    );
+
+    const { text, meta } = extractText(result);
+    
+    console.log('Gemini response meta:', {
+      hasText: !!text,
+      textLength: text?.length || 0,
+      finishReason: meta.finishReason,
+      candidateCount: meta.candidateCount
+    });
+
+    // Store response for debugging
+    try {
+      localStorage.setItem(`gcca.run.${runId}.response`, text?.substring(0, 50000) || '');
+      localStorage.setItem(`gcca.run.${runId}.meta`, JSON.stringify(meta, null, 2));
+    } catch (e) {
+      console.warn('Could not save to localStorage:', e);
+    }
+
+    // Check for empty response
+    if (!text || !text.trim()) {
+      const finishReason = (meta as any)?.finishReason;
+      const safety = (meta as any)?.safetyRatings;
+      
+      const err: PipelineError = {
+        stage: 'MODEL_CALL',
+        code: finishReason === 'SAFETY' ? 'MODEL_SAFETY_BLOCK'
+             : finishReason === 'MAX_TOKENS' ? 'MODEL_LENGTH_BLOCK'
+             : finishReason === 'STOP' ? 'OUTPUT_PARSE_FAILED'
+             : 'MODEL_SERVER_ERROR',
+        message: 'Model returned no text.',
+        hint: finishReason === 'SAFETY' 
+          ? 'The content was blocked for safety. Try removing sensitive information.'
+          : finishReason === 'MAX_TOKENS'
+          ? 'Output was too long. Try with fewer documents.'
+          : 'Open Debug panel to check finishReason and safety ratings.',
+        details: { finishReason, safety, meta }
+      };
+      
+      onProgress?.('MODEL_CALL', 'fail', err.message);
+      throw err;
+    }
+
+    onProgress?.('MODEL_CALL', 'ok', 'Response received successfully');
+    
+    return { 
+      rawText: text, 
+      meta, 
+      runId,
+      promptLength: finalPrompt.length
+    };
+    
+  } catch (error) {
+    // If it's already a PipelineError, pass it through
+    if ((error as any)?.stage) {
+      onProgress?.('MODEL_CALL', 'fail', (error as any).message);
+      throw error;
+    }
+    
+    // Convert to PipelineError
+    const pipelineError = geminiErrorToPipelineError(error, 'MODEL_CALL');
+    onProgress?.('MODEL_CALL', 'fail', pipelineError.message);
+    throw pipelineError;
+  }
+}

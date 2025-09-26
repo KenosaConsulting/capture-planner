@@ -1,0 +1,45 @@
+# US Army Corps of Engineers Configuration
+code: USACE
+names:
+  - "US Army Corps of Engineers"
+  - "USACE"
+  - "Army Corps of Engineers"
+  - "Corps of Engineers"
+bureaus:
+  - "Civil Works"
+  - "Military Programs"
+  - "Research and Development"
+  - "Real Estate"
+  - "Contracting"
+  - "Emergency Operations"
+signals:
+  priority_high:
+    - "SCADA"
+    - "OT security"
+    - "critical infrastructure"
+    - "water resources"
+    - "dam safety"
+    - "CIP"
+    - "operational technology"
+  priority_med:
+    - "navigation systems"
+    - "flood control"
+    - "hydropower"
+    - "environmental restoration"
+    - "military construction"
+mandates:
+  - "GAO"
+  - "DODIG"
+  - "OMB M-"
+  - "FISMA"
+  - "Critical Infrastructure Protection"
+scoring_weights:
+  specificity: 0.4
+  compliance: 0.3
+  budget: 0.3
+limits:
+  max_cards: 60
+  min_per_csf: 2
+  max_per_doc: 12
+annex:
+  page_size: 40

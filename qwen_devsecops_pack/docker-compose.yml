@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  qwen3-coder:
+    image: vllm/vllm-openai:latest
+    ports: ["8000:8000"]
+    environment:
+      - VLLM_WORKER_MULTIPROC_METHOD=spawn
+    command: >
+      --model Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8
+      --port 8000
+      --served-model-name qwen-coder-plus
+      --max-model-len 200000
+      --enable-auto-tool-choice
+      --tool-call-parser qwen3_coder
+    # Uncomment and adapt if you have GPUs
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: [gpu]

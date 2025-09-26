@@ -1,0 +1,49 @@
+# Department of the Interior Configuration
+code: DOI
+names:
+  - "Department of the Interior"
+  - "DOI"
+  - "Interior"
+  - "Dept of Interior"
+bureaus:
+  - "NPS"
+  - "National Park Service"
+  - "USGS"
+  - "US Geological Survey"
+  - "BLM"
+  - "Bureau of Land Management"
+  - "FWS"
+  - "Fish and Wildlife Service"
+  - "BOR"
+  - "Bureau of Reclamation"
+  - "BOEM"
+  - "BIA"
+signals:
+  priority_high:
+    - "land management systems"
+    - "wildfire"
+    - "resource protection"
+    - "geospatial data"
+    - "critical minerals"
+  priority_med:
+    - "park visitor systems"
+    - "wildlife tracking"
+    - "water resources"
+    - "tribal systems"
+    - "energy management"
+mandates:
+  - "GAO"
+  - "OIG"
+  - "OMB M-"
+  - "FISMA"
+  - "FITARA"
+scoring_weights:
+  specificity: 0.35
+  compliance: 0.35
+  budget: 0.3
+limits:
+  max_cards: 60
+  min_per_csf: 2
+  max_per_doc: 12
+annex:
+  page_size: 40
