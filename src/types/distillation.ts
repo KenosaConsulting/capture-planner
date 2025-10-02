@@ -115,6 +115,9 @@ export interface TieredEvidence {
   highSignal: EvidenceCard[];    // ~40±8 for citations
   context: ContextCard[];         // ~60±20 for background
   themes: Map<string, number>;   // theme -> card count
+  cards?: EvidenceCard[];         // alias for compatibility
+  coverage?: number;              // coverage percentage
+  citationCoverage?: number;      // citation coverage percentage
 }
 
 export interface DistillationConfig {
@@ -137,4 +140,31 @@ export interface DistillationConfig {
     compliance: number;
     budget: number;
   };
+}
+
+export interface DistillationPipelineResult {
+  success: boolean;
+  evidence: TieredEvidence;
+  manifest: DistillationManifest;
+  coverageReport: CoverageReport;
+  dedupReport: DedupReport;
+  error?: string;
+  errors?: string[];
+  prompts?: {
+    briefing?: string;
+    procurement?: string;
+  };
+  evidenceCards?: EvidenceCard[];
+}
+
+export interface CoverageReport {
+  covered: string[];
+  weak: string[];
+  missing: string[];
+}
+
+export interface DedupReport {
+  totalCards: number;
+  duplicatesRemoved: number;
+  finalCards: number;
 }
