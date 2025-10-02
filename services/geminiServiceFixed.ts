@@ -143,7 +143,7 @@ ${JSON.stringify(sanitizedMetrics, null, 2)}
 [/PROCUREMENT_METRICS_JSON]
 `;
   
-  return `${metricsBlock}
+  const basePrompt = `${metricsBlock}
 
 System: Return only a fenced markdown block. No JSON, no other text.
 
@@ -185,10 +185,10 @@ Citation Rules (MANDATORY):
 - Use [procurement_csv] for any numeric claim derived from the CSV (totals, top vehicles, growth, SB%)
 - Do not fabricate sources; if a claim lacks support above, omit it`;
     
-    return prompt + evidenceBlock;
+    return basePrompt + evidenceBlock;
   }
   
-  return prompt;
+  return basePrompt;
 }
 
 // Compose PLAYS_MD prompt with metrics and evidence
@@ -205,7 +205,7 @@ function composePlaysPrompt(cards: any[], metrics: any, agencyCode: string, evid
   // Include top vehicles and vendors if available
   const topVehicles = metrics.topVehicles?.slice(0, 3).map(v => v.key).join(', ') || 'SEWP, CIO-SP4, 8(a)';
   
-  return `System: Return only a fenced markdown list with exactly 3 plays. No JSON.
+  const basePrompt = `System: Return only a fenced markdown list with exactly 3 plays. No JSON.
 
 Generate 3 strategic capture plays for ${agencyCode}.
 
@@ -249,10 +249,10 @@ Play Rules (MANDATORY):
 - Ground the "Vehicles" line in the top vehicles from procurement metrics
 - Numeric proof points MUST cite [procurement_csv]`;
     
-    return prompt + evidenceBlock;
+    return basePrompt + evidenceBlock;
   }
   
-  return prompt;
+  return basePrompt;
 }
 
 // Compose PROCUREMENT_JSON prompt
@@ -520,10 +520,9 @@ export async function generateExecutiveBriefingWithFourCalls(
         
         // Robust evidence gate: accept any of (highSignal packs OR cards)
         const hasHighSignal = !!(distillationResult?.evidence?.highSignal && distillationResult.evidence.highSignal.length > 0);
-        const hasCards = !!(distillationResult?.evidence?.cards && distillationResult.evidence.cards.length > 0);
         
-        if (hasHighSignal || hasCards) {
-          evidenceCards = distillationResult.evidence.highSignal || distillationResult.evidence.cards || [];
+        if (hasHighSignal) {
+          evidenceCards = distillationResult.evidence.highSignal;
           const highSignalCount = evidenceCards.length;
           
           // Check if we have enough high-signal cards (Fix A - degrade instead of throw)
@@ -553,8 +552,15 @@ export async function generateExecutiveBriefingWithFourCalls(
           }
           
           ledger.runPacks = distillationResult.evidence;
-          ledger.coverage = distillationResult.evidence.coverage;
-          ledger.quality.citationCoverage = distillationResult.evidence.citationCoverage || 0;
+          const coverage = distillationResult.coverageReport;
+          if (coverage) {
+            ledger.coverage = {
+              covered: Object.keys(coverage.coverage || {}),
+              missing: coverage.missingThemes || [],
+              weak: coverage.weakThemes || []
+            };
+          }
+          ledger.quality.citationCoverage = distillationResult.qualityGates?.citation_coverage?.ratio || 0;
           
         } else {
           throw new Error('Two-tier distillation did not produce evidence');

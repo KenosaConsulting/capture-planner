@@ -1,19 +1,12 @@
 // Main distillation service export
-// Uses two-tier evidence system per expert recommendation
+// Re-export the orchestrator API to match repository usage
 
-export { distillDocumentsTwoTier as runDistillationPipeline } from './twoTierDistiller';
-export type { 
-  EvidenceCard, 
+export { runDistillationPipeline } from './orchestrator';
+export type {
+  EvidenceCard,
   ContextCard,
   TieredEvidence,
   DistillationManifest,
-  DistillationConfig 
+  DistillationConfig
 } from '../../types/distillation';
-
-// For backward compatibility
-export interface DistillationPipelineResult {
-  success: boolean;
-  evidenceCards?: any[];
-  manifest?: any;
-  error?: string;
-}
+export type { DistillationPipelineResult } from './orchestrator';
