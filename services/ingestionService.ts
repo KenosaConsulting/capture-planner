@@ -186,7 +186,7 @@ export const parseWithSchema = (
       if (header.includes('date')) {
         value = parseDate(value);
       } else if (header.includes('amount') || header.includes('value')) {
-        value = parseFloat(value) || 0;
+        value = String(parseFloat(value) || 0);
       } else if (header === 'naics_code') {
         value = standardizeNAICS(value);
       } else if (header === 'product_or_service_code') {

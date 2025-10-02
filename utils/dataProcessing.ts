@@ -238,3 +238,58 @@ export function calculateProcurementMetrics(rows: Record<string, any>[]) {
   };
   return result;
 }
+
+// Additional utility functions for ingestion service
+export function calculateCAGR(values: number[]): number {
+  if (values.length < 2) return 0;
+  const first = values[0];
+  const last = values[values.length - 1];
+  if (first === 0) return 0;
+  return Math.pow(last / first, 1 / (values.length - 1)) - 1;
+}
+
+export function calculateHHI(values: number[]): number {
+  const total = values.reduce((sum, val) => sum + val, 0);
+  if (total === 0) return 0;
+  return values.reduce((sum, val) => sum + Math.pow(val / total, 2), 0);
+}
+
+export function getTopItems(items: Array<{key: string, amount: number}>, count: number = 5): string[] {
+  return items
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, count)
+    .map(item => item.key);
+}
+
+export function calculatePercentile(values: number[], percentile: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.ceil((percentile / 100) * sorted.length) - 1;
+  return sorted[Math.max(0, index)] || 0;
+}
+
+export function getFiscalYear(date: Date): number {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1; // 0-indexed
+  return month >= 10 ? year + 1 : year;
+}
+
+export function getFiscalQuarter(date: Date): number {
+  const month = date.getMonth() + 1; // 0-indexed
+  if (month >= 10) return 1; // Q1: Oct-Dec
+  if (month >= 7) return 4;  // Q4: Jul-Sep
+  if (month >= 4) return 3;  // Q3: Apr-Jun
+  return 2; // Q2: Jan-Mar
+}
+
+export function identifyRecompetes(contracts: Array<{endDate: string, value: number}>): number {
+  const now = new Date();
+  const sixMonthsFromNow = new Date(now.getTime() + (6 * 30 * 24 * 60 * 60 * 1000));
+  
+  return contracts.reduce((total, contract) => {
+    const endDate = new Date(contract.endDate);
+    if (endDate >= now && endDate <= sixMonthsFromNow) {
+      return total + contract.value;
+    }
+    return total;
+  }, 0);
+}

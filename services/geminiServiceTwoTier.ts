@@ -231,7 +231,7 @@ export async function generateExecutiveBriefingWithTwoTier(
       _note: 'Generated placeholder metrics'
     };
     
-    console.log(`Prompts ready. Total length: ${pipelineResult?.totalPromptLength || 'unknown'} chars`);
+    console.log(`Prompts ready. Total length: ${prompts.briefing?.length + prompts.procurement?.length || 'unknown'} chars`);
     console.log('Executing API calls with pre-composed prompts...');
     
     // Step 2: Execute Four API Calls using pre-composed prompts
@@ -327,7 +327,7 @@ export async function generateExecutiveBriefingWithTwoTier(
         qualityGates: results.qualityGates
       },
       runId,
-      promptLength: pipelineResult?.totalPromptLength || 0,
+      promptLength: (prompts.briefing?.length || 0) + (prompts.procurement?.length || 0),
       distillationUsed: results.distillationUsed,
       distillationStats: results.distillationStats,
       parsedSections: {
