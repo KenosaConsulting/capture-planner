@@ -142,8 +142,9 @@ export async function generateExecutiveBriefingWithTwoTier(
     const totalSizeMB = totalSize / (1024 * 1024);
     const needsDistillation = totalSize > 300_000;
     
-    let prompts: any = {};
-    let procurementMetrics: any = {};
+  let prompts: any = {};
+  let procurementMetrics: any = {};
+  let pipelineResult: TwoTierPipelineResult | undefined;
     
     if (needsDistillation) {
       onProgress?.('DISTILLATION', 'start', `Large files (${totalSizeMB.toFixed(1)}MB). Starting two-tier distillation...`);
@@ -152,7 +153,7 @@ export async function generateExecutiveBriefingWithTwoTier(
       const docFiles = files.filter(f => !f.name.endsWith('.csv'));
       
       // Run two-tier pipeline with normalized agency
-      const pipelineResult: TwoTierPipelineResult = await runTwoTierPipeline({
+      pipelineResult = await runTwoTierPipeline({
         files: docFiles,
         csvFile,
         agencyCode: agencyName, // Will be normalized in orchestrator

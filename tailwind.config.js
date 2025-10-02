@@ -1,6 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './**/*.{ts,tsx,js,jsx}'],
+  // Limit content scanning to app sources to avoid node_modules
+  content: [
+    './index.html',
+    './src/**/*.{ts,tsx,js,jsx}',
+    './components/**/*.{ts,tsx,js,jsx}',
+    './services/**/*.{ts,tsx,js,jsx}'
+  ],
   theme: {
     extend: {
       colors: {

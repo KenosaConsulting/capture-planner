@@ -7,7 +7,12 @@ export type PipelineStage =
   | 'PROCUREMENT_ANALYSIS'
   | 'FINDINGS_SYNTHESIS'
   | 'COMPOSE_BRIEFING'
-  | 'MODEL_CALL';
+  | 'MODEL_CALL'
+  | 'BRIEFING_MD'
+  | 'PLAYS_MD'
+  | 'PROCUREMENT_JSON'
+  | 'ANNEX_JSON'
+  | 'ORCHESTRATION';
 
 export interface PipelineError {
   stage: PipelineStage;
@@ -24,7 +29,17 @@ export interface PipelineError {
     | 'MODEL_INVALID_REQUEST'
     | 'MODEL_SERVER_ERROR'
     | 'OUTPUT_PARSE_FAILED'
-    | 'OUTPUT_SECTION_MISSING';
+    | 'OUTPUT_SECTION_MISSING'
+    | 'CALL_FAILED'
+    | 'TIMEOUT'
+    | 'EMPTY_RESPONSE'
+    | 'OUTPUT_TOO_SHORT'
+    | 'EMPTY_ARRAY'
+    | 'SUSPICIOUS_VALUE'
+    | 'INVALID_PERCENTAGE'
+    | 'DATA_INCONSISTENCY'
+    | 'FALLBACK_USED'
+    | 'NO_SECTIONS_FOUND';
   message: string;         // short, user-facing
   hint?: string;           // concrete next step
   details?: unknown;       // raw object (finishReason, safety ratings, etc.)
